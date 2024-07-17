@@ -14,6 +14,8 @@ display = pygame.Surface((300, 200))
 
 clock = pygame.time.Clock()
 
+stopdiagnalspeed = True
+
 # player
 # path = join('images','player.png')
 player_image = pygame.image.load('../images/player.png').convert_alpha()
@@ -53,7 +55,7 @@ while True:
     if player_rect.left >= WINDOWWIDTH:
         player_rect.x = 1 - player_rect.width
     if player_rect.bottom <= 0:
-        player_rect.y = WINDOWHEIGHT - 1
+        player_rect.y = WINDOWHEIGHT - 50
     if player_rect.top >= WINDOWHEIGHT - 1:
         player_rect.bottom = 0
 
@@ -61,17 +63,30 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-        if event.type == KEYDOWN:
-            if event.key == K_w:
-                playerDiraction.y = -1
-            if event.key == K_a:
-                playerDiraction.x = -1
-            if event.key == K_s:
-                playerDiraction.y = 1
-            if event.key == K_d:
-                playerDiraction.x = 1
+        # if event.type == KEYDOWN:
+        #     if event.key == K_w:
+        #         playerDiraction.y = -1
+        #     if event.key == K_a:
+        #         playerDiraction.x = -1
+        #     if event.key == K_s:
+        #         playerDiraction.y = 1
+        #     if event.key == K_d:
+        #         playerDiraction.x = 1
+
+    # # input
+    key = pygame.key.get_pressed()
+    # if key[pygame.K_w]:  # this will hear the input continuously when pressed
+    #     print("w")
+    playerDiraction.x = int(key[pygame.K_d]) - int(key[pygame.K_a])
+    playerDiraction.y = int(key[pygame.K_s]) - int(key[pygame.K_w])
+    recentlyPressed = pygame.key.get_just_pressed()
+
+    if recentlyPressed[pygame.K_SPACE]:  # hear space once
+        print("lazer is fired")
 
     # Player Movements
+    if stopdiagnalspeed:
+        playerDiraction = playerDiraction.normalize() if playerDiraction else playerDiraction
     player_rect.center += playerDiraction * pSpeed * dt
     # player_rect.x += playerDiraction * pSpeed
 
@@ -83,4 +98,3 @@ while True:
     # screen.blit(lazer_image, lazer_rect)
     screen.blit(player_image, player_rect)
     pygame.display.update()
-1:32
