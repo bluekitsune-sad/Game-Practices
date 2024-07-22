@@ -25,6 +25,17 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.Vector2()
         self.speed = 250
 
+        # cooldown
+        self.can_shoot = True
+        self.lazer_shoot_time = 0
+        self.cooldown_duration = 400
+
+    def lazer_timer(self):
+        if not self.can_shoot:
+            current_time = pygame.time.get_ticks()  # get time in ms
+            if current_time - self.lazer_shoot_time >= self.cooldown_duration:
+                self.can_shoot = True
+
     def update(self, dt):
         keys = pygame.key.get_pressed()
         self.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
@@ -33,8 +44,11 @@ class Player(pygame.sprite.Sprite):
         self.rect.center += self.direction * self.speed * dt
 
         recent_keys = pygame.key.get_just_pressed()
-        if recent_keys[pygame.K_SPACE]:
-            print('fire laser')
+        if recent_keys[pygame.K_SPACE] and self.can_shoot:
+            Lazer(lazer_image, self.rect.midtop, all_sprites)
+            self.can_shoot = False
+            self.lazer_shoot_time = pygame.time.get_ticks()
+        self.lazer_timer()
 
 
 class Star(pygame.sprite.Sprite):
@@ -48,7 +62,24 @@ class Meteor(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
         self.image = pygame.image.load('../images/meteor.png').convert_alpha()
-        self.rect = self.image.get_frect(center=(WINDOWWIDTH / 2, WINDOWHEIGHT / 2))
+        self.rect = self.image.get_frect(center=(randint(0, WINDOWWIDTH), 0))
+
+    def update(self, dt):
+        self.rect.centery += 200 * dt
+        if self.rect.top > WINDOWHEIGHT:
+            self.kill()
+
+
+class Lazer(pygame.sprite.Sprite):
+    def __init__(self, surf, pos, groups):
+        super().__init__(groups)
+        self.image = surf
+        self.rect = self.image.get_frect(midbottom=pos)
+
+    def update(self, dt):
+        self.rect.centery -= 400 * dt
+        if self.rect.bottom < 0:
+            self.kill()
 
 
 all_sprites = pygame.sprite.Group()
@@ -57,7 +88,7 @@ star_surf = pygame.image.load('../images/star.png').convert_alpha()
 for i in range(20):
     Star(all_sprites, star_surf)
 
-Meteor(all_sprites)
+# Meteor(all_sprites)
 # Meteor(all_sprites, pygame.image.load('../images/meteor.png').convert_alpha())
 
 player = Player(all_sprites)
@@ -85,10 +116,13 @@ player = Player(all_sprites)
 lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
 # lazer_rect = lazer_image.get_frect(bottom=(player_rect.top, player_rect.top))
 
+
+# custom timer
+meteor_event = pygame.event.custom_type()
+pygame.time.set_timer(meteor_event, 500)
+
 while True:
     dt = clock.tick(60) / 1000  # delta time = makeing fixed fps / 1 sec
-
-    all_sprites.update(dt)
 
     # collion
     # if player_rect.left <= 0:
@@ -112,6 +146,8 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == meteor_event:
+            Meteor(all_sprites)
         # if event.type == KEYDOWN:
         #     if event.key == K_w:
         #         playerDiraction.y = -1
@@ -138,6 +174,8 @@ while True:
     # playerDiraction = playerDiraction.normalize() if playerDiraction else playerDiraction
     # player_rect.center += playerDiraction * pSpeed * dt
     # player_rect.x += playerDiraction * pSpeed
+
+    all_sprites.update(dt)
 
     screen.fill("darkgray")
 
