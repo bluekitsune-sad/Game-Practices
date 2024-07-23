@@ -1,5 +1,5 @@
 import pygame, sys
-from random import random, choice, randint
+from random import random, choice, randint, uniform
 from pygame import *
 from os.path import join
 
@@ -62,12 +62,18 @@ class Meteor(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
         self.image = pygame.image.load('../images/meteor.png').convert_alpha()
-        self.rect = self.image.get_frect(center=(randint(0, WINDOWWIDTH), 0))
+        self.rect = self.image.get_frect(midbottom=(randint(0, WINDOWWIDTH), 0))
+        self.start_time = pygame.time.get_ticks()
+        self.lifetime = 3000
+        self.direction = pygame.Vector2(uniform(-0.5, 0.5), 1)
+        self.speed = randint(400, 500)
 
     def update(self, dt):
-        self.rect.centery += 200 * dt
+        self.rect.center += self.direction * self.speed * dt
         if self.rect.top > WINDOWHEIGHT:
             self.kill()
+        # if pygame.time.get_ticks() - self.start_time >= self.lifetime:
+        #     self.kill()
 
 
 class Lazer(pygame.sprite.Sprite):
