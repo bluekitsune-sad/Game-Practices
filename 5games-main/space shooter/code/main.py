@@ -59,9 +59,9 @@ class Star(pygame.sprite.Sprite):
 
 
 class Meteor(pygame.sprite.Sprite):
-    def __init__(self, groups):
+    def __init__(self, groups, surf):
         super().__init__(groups)
-        self.image = pygame.image.load('../images/meteor.png').convert_alpha()
+        self.image = surf
         self.rect = self.image.get_frect(midbottom=(randint(0, WINDOWWIDTH), 0))
         self.start_time = pygame.time.get_ticks()
         self.lifetime = 3000
@@ -113,7 +113,7 @@ player = Player(all_sprites)
 # star_postion = [(randint(0, WINDOWWIDTH), randint(0, WINDOWHEIGHT)) for _ in range(20)]
 
 # meteor
-# meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
+meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
 # # meteor_rect = meteor_image.get_frect(center=(WINDOWWIDTH / 2, WINDOWHEIGHT / 2))
 # Meteor(all_sprites, meteor_image)
 
@@ -153,7 +153,7 @@ while True:
             pygame.quit()
             sys.exit()
         if event.type == meteor_event:
-            Meteor(all_sprites)
+            Meteor(all_sprites, meteor_image)
         # if event.type == KEYDOWN:
         #     if event.key == K_w:
         #         playerDiraction.y = -1
@@ -182,6 +182,8 @@ while True:
     # player_rect.x += playerDiraction * pSpeed
 
     all_sprites.update(dt)
+    pygame.sprite.spritecollide(player, meteor_image, )
+
 
     screen.fill("darkgray")
 
