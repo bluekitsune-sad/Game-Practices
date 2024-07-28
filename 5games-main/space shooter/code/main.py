@@ -16,6 +16,8 @@ clock = pygame.time.Clock()
 
 stopdiagnalspeed = True
 
+running = True
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
@@ -45,7 +47,7 @@ class Player(pygame.sprite.Sprite):
 
         recent_keys = pygame.key.get_just_pressed()
         if recent_keys[pygame.K_SPACE] and self.can_shoot:
-            Lazer(lazer_image, self.rect.midtop, all_sprites)
+            Lazer(lazer_image, self.rect.midtop, (all_sprites, laser_sprites))
             self.can_shoot = False
             self.lazer_shoot_time = pygame.time.get_ticks()
         self.lazer_timer()
@@ -88,9 +90,16 @@ class Lazer(pygame.sprite.Sprite):
             self.kill()
 
 
-all_sprites = pygame.sprite.Group()
-
+# import
 star_surf = pygame.image.load('../images/star.png').convert_alpha()
+meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
+lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
+font = pygame.font.Font('../images/Oxanium-Bold.ttf', 40)
+
+# sprites
+all_sprites = pygame.sprite.Group()
+meteor_sprites = pygame.sprite.Group()
+laser_sprites = pygame.sprite.Group()
 for i in range(20):
     Star(all_sprites, star_surf)
 
@@ -98,6 +107,28 @@ for i in range(20):
 # Meteor(all_sprites, pygame.image.load('../images/meteor.png').convert_alpha())
 
 player = Player(all_sprites)
+
+
+def collisions():
+    global running
+
+    collision_sprites = pygame.sprite.spritecollide(player, meteor_sprites, True)
+    # if collision_sprites:
+    #     running = False
+
+    for laser in laser_sprites:
+        collided_sprites = pygame.sprite.spritecollide(laser, meteor_sprites, True)
+        if collided_sprites:
+            laser.kill()
+
+
+def display_score():
+    current_time = pygame.time.get_ticks() // 100
+    text_surf = font.render(str(current_time), False, (255, 255, 255))
+    text_rect = text_surf.get_frect(midbottom=(WINDOWWIDTH / 2, WINDOWHEIGHT - 50))
+    screen.blit(text_surf, text_rect)
+    pygame.draw.rect(screen, (240, 240, 240), text_rect.inflate(20, 10).move(0, -8), 5, 10)
+
 
 # player
 # path = join('images','player.png')
@@ -113,13 +144,13 @@ player = Player(all_sprites)
 # star_postion = [(randint(0, WINDOWWIDTH), randint(0, WINDOWHEIGHT)) for _ in range(20)]
 
 # meteor
-meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
+# meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
 # # meteor_rect = meteor_image.get_frect(center=(WINDOWWIDTH / 2, WINDOWHEIGHT / 2))
 # Meteor(all_sprites, meteor_image)
 
 
 # lazer
-lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
+# lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
 # lazer_rect = lazer_image.get_frect(bottom=(player_rect.top, player_rect.top))
 
 
@@ -127,7 +158,7 @@ lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
 meteor_event = pygame.event.custom_type()
 pygame.time.set_timer(meteor_event, 500)
 
-while True:
+while running:
     dt = clock.tick(60) / 1000  # delta time = makeing fixed fps / 1 sec
 
     # collion
@@ -153,7 +184,7 @@ while True:
             pygame.quit()
             sys.exit()
         if event.type == meteor_event:
-            Meteor(all_sprites, meteor_image)
+            Meteor((all_sprites, meteor_sprites), meteor_image)
         # if event.type == KEYDOWN:
         #     if event.key == K_w:
         #         playerDiraction.y = -1
@@ -182,10 +213,10 @@ while True:
     # player_rect.x += playerDiraction * pSpeed
 
     all_sprites.update(dt)
-    pygame.sprite.spritecollide(player, meteor_image, )
+    collisions()
 
-
-    screen.fill("darkgray")
+    screen.fill("#3a2e3f")
+    display_score()
 
     # surf = pygame.transform.scale(display, WINDOW_SIZE)
     # screen.blit(surf, (0, 0))
@@ -194,5 +225,6 @@ while True:
     # screen.blit(meteor_image, meteor_rect)
     # screen.blit(lazer_image, lazer_rect)
     # screen.blit(player_image, player_rect)
+    # screen.blit(text_surf)
     all_sprites.draw(screen)
     pygame.display.update()
