@@ -17,20 +17,27 @@ clock = pygame.time.Clock()
 stopdiagnalspeed = True
 
 running = True
+died = False
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
+        self.original_surf = pygame.image.load('../images/player.png').convert_alpha()
         self.image = pygame.image.load('../images/player.png').convert_alpha()
         self.rect = self.image.get_frect(center=(WINDOWWIDTH / 2, 100 + (WINDOWHEIGHT / 2)))
         self.direction = pygame.Vector2()
         self.speed = 250
+        self.rotation_speed = 100
+        self.rotation = 0
 
         # cooldown
         self.can_shoot = True
         self.lazer_shoot_time = 0
         self.cooldown_duration = 400
+
+        # mask
+        self.mask = pygame.mask.from_surface(self.image)
 
     def lazer_timer(self):
         if not self.can_shoot:
@@ -52,6 +59,9 @@ class Player(pygame.sprite.Sprite):
             self.lazer_shoot_time = pygame.time.get_ticks()
         self.lazer_timer()
 
+        if died:
+            self.rotation += (self.rotation_speed * clock.get_time()) * dt
+            self.image = pygame.transform.rotozoom(self.original_surf, self.rotation, 1)
 
 class Star(pygame.sprite.Sprite):
     def __init__(self, groups, surf):
@@ -63,12 +73,15 @@ class Star(pygame.sprite.Sprite):
 class Meteor(pygame.sprite.Sprite):
     def __init__(self, groups, surf):
         super().__init__(groups)
+        self.original_surf = surf
         self.image = surf
         self.rect = self.image.get_frect(midbottom=(randint(0, WINDOWWIDTH), 0))
         self.start_time = pygame.time.get_ticks()
         self.lifetime = 3000
         self.direction = pygame.Vector2(uniform(-0.5, 0.5), 1)
         self.speed = randint(400, 500)
+        self.rotation_speed = randint(40, 80)
+        self.rotation = 0
 
     def update(self, dt):
         self.rect.center += self.direction * self.speed * dt
@@ -76,6 +89,8 @@ class Meteor(pygame.sprite.Sprite):
             self.kill()
         # if pygame.time.get_ticks() - self.start_time >= self.lifetime:
         #     self.kill()
+        self.image = pygame.transform.rotozoom(self.original_surf, self.rotation, 1)
+        self.rect = self.image.get_frect(center=self.rect.center)
 
 
 class Lazer(pygame.sprite.Sprite):
@@ -95,6 +110,7 @@ star_surf = pygame.image.load('../images/star.png').convert_alpha()
 meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
 lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
 font = pygame.font.Font('../images/Oxanium-Bold.ttf', 40)
+explosion_frames = [pygame.image.load('../images/explosion/'+str(i)+'.png').convert_alpha() for i in range(21)]
 
 # sprites
 all_sprites = pygame.sprite.Group()
@@ -108,13 +124,21 @@ for i in range(20):
 
 player = Player(all_sprites)
 
+laser_sound = pygame.mixer.Sound('../audio/laser.wav')
+laser_sound.set_volume(0.5)
+explosion_sound = pygame.mixer.Sound('../audio/explosion.wav')
+game_music = pygame.mixer.Sound('../audio/game_music.wav')
+game_music.set_volume(0.4)
+# game_music.play(loops= -1)
+
 
 def collisions():
-    global running
-
-    collision_sprites = pygame.sprite.spritecollide(player, meteor_sprites, True)
-    # if collision_sprites:
-    #     running = False
+    # global running
+    global died
+    collision_sprites = pygame.sprite.spritecollide(player, meteor_sprites, True, pygame.sprite.collide_mask)
+    if collision_sprites:
+        # running = False
+        died = True
 
     for laser in laser_sprites:
         collided_sprites = pygame.sprite.spritecollide(laser, meteor_sprites, True)
@@ -128,6 +152,23 @@ def display_score():
     text_rect = text_surf.get_frect(midbottom=(WINDOWWIDTH / 2, WINDOWHEIGHT - 50))
     screen.blit(text_surf, text_rect)
     pygame.draw.rect(screen, (240, 240, 240), text_rect.inflate(20, 10).move(0, -8), 5, 10)
+
+
+class AnimatedExplosion(pygame.sprite.Sprite):
+    def __init__(self, frames, pos, groups):
+        super().__init__(groups)
+        self.frames = frames
+        self.frame_index = 0
+        self.image = self.frames[self.frame_index]
+        self.rect = self.image.get_frect(center=pos)
+        explosion_sound.play()
+
+    def update(self, dt):
+        self.frame_index += 20 * dt
+        if self.frame_index < len(self.frames):
+            self.image = self.frames[int(self.frame_index)]
+        else:
+            self.kill()
 
 
 # player
