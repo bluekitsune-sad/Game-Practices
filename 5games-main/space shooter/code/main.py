@@ -110,13 +110,29 @@ class Lazer(pygame.sprite.Sprite):
             self.kill()
 
 
+class AnimatedExplosion(pygame.sprite.Sprite):
+    def __init__(self, frames, pos, groups):
+        super().__init__(groups)
+        self.frames = frames
+        self.frame_index = 0
+        self.image = self.frames[self.frame_index]
+        self.rect = self.image.get_frect(center=pos)
+        explosion_sound.play()
+
+    def update(self, dt):
+        self.frame_index += 20 * dt
+        if self.frame_index < len(self.frames):
+            self.image = self.frames[int(self.frame_index)]
+        else:
+            self.kill()
+
+
 # import
 star_surf = pygame.image.load('../images/star.png').convert_alpha()
 meteor_image = pygame.image.load('../images/meteor.png').convert_alpha()
 lazer_image = pygame.image.load('../images/laser.png').convert_alpha()
 font = pygame.font.Font('../images/Oxanium-Bold.ttf', 40)
-explosion_frames = [pygame.image.load('../images/explosion/' + str(i) + '.png').convert_alpha() for i in range(21)]
-
+explosion_frames = [pygame.image.load(f'../images/explosion/{i}.png') for i in range(21)]
 # sprites
 all_sprites = pygame.sprite.Group()
 meteor_sprites = pygame.sprite.Group()
@@ -151,6 +167,7 @@ def collisions():
         collided_sprites = pygame.sprite.spritecollide(laser, meteor_sprites, True)
         if collided_sprites:
             laser.kill()
+            AnimatedExplosion(explosion_frames, laser.rect.midtop, all_sprites)
 
 
 def display_score():
@@ -159,23 +176,6 @@ def display_score():
     text_rect = text_surf.get_frect(midbottom=(WINDOWWIDTH / 2, WINDOWHEIGHT - 50))
     screen.blit(text_surf, text_rect)
     pygame.draw.rect(screen, (240, 240, 240), text_rect.inflate(20, 10).move(0, -8), 5, 10)
-
-
-class AnimatedExplosion(pygame.sprite.Sprite):
-    def __init__(self, frames, pos, groups):
-        super().__init__(groups)
-        self.frames = frames
-        self.frame_index = 0
-        self.image = self.frames[self.frame_index]
-        self.rect = self.image.get_frect(center=pos)
-        explosion_sound.play()
-
-    def update(self, dt):
-        self.frame_index += 20 * dt
-        if self.frame_index < len(self.frames):
-            self.image = self.frames[int(self.frame_index)]
-        else:
-            self.kill()
 
 
 # player
@@ -276,5 +276,3 @@ while running:
     # screen.blit(text_surf)
     all_sprites.draw(screen)
     pygame.display.update()
-
-
