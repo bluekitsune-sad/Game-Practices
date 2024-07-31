@@ -59,6 +59,7 @@ class Player(pygame.sprite.Sprite):
             Lazer(lazer_image, self.rect.midtop, (all_sprites, laser_sprites))
             self.can_shoot = False
             self.lazer_shoot_time = pygame.time.get_ticks()
+            lazer_sound.play()
         self.lazer_timer()
 
         # if died:
@@ -145,14 +146,12 @@ for i in range(20):
 
 player = Player(all_sprites)
 
-laser_sound = pygame.mixer.Sound('../audio/laser.wav')
-laser_sound.set_volume(0.5)
+lazer_sound = pygame.mixer.Sound('../audio/laser.wav')
+lazer_sound.set_volume(0.5)
 explosion_sound = pygame.mixer.Sound('../audio/explosion.wav')
 game_music = pygame.mixer.Sound('../audio/game_music.wav')
 game_music.set_volume(0.4)
-
-
-# game_music.play(loops= -1)
+game_music.play(loops=-1)
 
 
 def collisions():
