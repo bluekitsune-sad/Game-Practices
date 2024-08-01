@@ -1,46 +1,43 @@
 from settings import *
-
-pygame.init()
-pygame.display.set_caption('Vampire Shooter')
-
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), 0)
-game_running = True
-clock = pygame.time.Clock()
+from player import Player
 
 
-class Player(pygame.sprite.Sprite):
-    def __init__(self, groups):
-        super().__init__(groups)
-        self.image = pygame.image.load('../images/player/down/0.png').convert_alpha()
-        self.rect = self.image.get_frect(center=(WINDOW_WIDTH / 2, 100 + (WINDOW_HEIGHT / 2)))
-        self.direction = pygame.Vector2()
-        self.speed = 250
+class Game:
+    def __init__(self):
+        # setup
+        pygame.init()
+        self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        pygame.display.set_caption('Survivor')
+        self.clock = pygame.time.Clock()
+        self.running = True
 
-    def update(self, dt):
-        keys = pygame.key.get_pressed()
-        self.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
-        self.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
-        self.direction = self.direction.normalize() if self.direction else self.direction
-        self.rect.center += self.direction * self.speed * dt
+        # groups
+        self.all_sprites = pygame.sprite.Group()
+
+        # sprites
+        self.player = Player((400, 300), self.all_sprites)
+
+    def run(self):
+        while self.running:
+            # dt
+            dt = self.clock.tick() / 1000
+
+            # event loop
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+            # update
+            self.all_sprites.update(dt)
+
+            # draw
+            self.display_surface.fill('black')
+            self.all_sprites.draw(self.display_surface)
+            pygame.display.update()
+
+        pygame.quit()
 
 
-# sprite
-
-# import
-allSprite = pygame.sprite.Group()
-
-# player
-player = Player(allSprite)
-
-while game_running:
-    dt = clock.tick(60) / 1000
-
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.QUIT
-            sys.exit()
-
-    allSprite.update(dt)
-
-    allSprite.draw(screen)
-    pygame.display.update
+if __name__ == '__main__': # this is to check that only main.py runs
+    game = Game()
+    game.run()
