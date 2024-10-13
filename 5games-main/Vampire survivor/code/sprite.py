@@ -24,7 +24,7 @@ class Gun(pygame.sprite.Sprite):
         self.distance = 140
         self.player_direction = pygame.Vector2(0, 1)
 
-        # sprite setup 
+        # sprite setup     
         super().__init__(groups)
         self.gun_surf = pygame.image.load('../images/gun/gun.png').convert_alpha()
         self.image = self.gun_surf
