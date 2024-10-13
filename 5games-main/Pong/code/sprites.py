@@ -1,5 +1,3 @@
-sprites.py
-
 from settings import * 
 from random import choice, uniform
 
